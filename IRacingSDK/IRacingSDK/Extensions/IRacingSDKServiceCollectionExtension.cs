@@ -19,7 +19,7 @@ public static class IRacingSDKServiceCollectionExtension
             }
         });
 
-        services.AddScoped<IRacingSDKWrapper>();
+        services.AddScoped<IIRacingSDKWrapper, IRacingSDKWrapper>();
         services.AddScoped<IIRacingSDK, IRacingSDK>();
 
         return services;

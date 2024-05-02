@@ -1,6 +1,7 @@
 ﻿using IRacingSDK.Abstractions;
 using IRacingSDK.Exceptions;
 using IRacingSDK.Models;
+using IRacingSDK.Readers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32.SafeHandles;
 using System.IO.MemoryMappedFiles;
@@ -56,8 +57,7 @@ public class IRacingSDK : IIRacingSDK
 
             var startUpEvent = DLLInjector.OpenEvent(Definitions.DesiredAccess, false, Definitions.DataValidEventName);
             if (startUpEvent == IntPtr.Zero)
-            {
-                _logger.LogError("Could not open event");
+            {               
                 throw new Exception("Could not open event");
             }
             else
@@ -78,9 +78,9 @@ public class IRacingSDK : IIRacingSDK
                 DLLInjector.CloseHandle(startUpEvent);
             }
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            Console.WriteLine("Error: " + e.Message);
+            _logger.LogError(ex,ex.Message);
             return false;
         }
         return true;

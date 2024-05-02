@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace IRacingSDK;
+namespace IRacingSDK.Parsers;
 
 /// <summary>
 /// Handles All the YAML Parsing

@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using YamlDotNet.Serialization;
 
 namespace IRacingSDK;
-public class IRacingSDKWrapper
+public class IRacingSDKWrapper : IIRacingSDKWrapper
 {
     private bool _isRunning;
     private Task? _looper;
@@ -34,6 +34,7 @@ public class IRacingSDKWrapper
         _isRunning = true;
         _looper?.Dispose();
         _looper = Task.Run(Loop);
+        _logger.LogInformation("Successfully started loop");
     }
 
     private void Loop()
@@ -42,7 +43,7 @@ public class IRacingSDKWrapper
         int lastUpdate = -1;
 
         while (_isRunning)
-        {
+        { 
             //Check if we can find the game
             if (_sdk.IsConnected())
             {                
@@ -151,8 +152,9 @@ public class IRacingSDKWrapper
             var sessionnum = _sdk.GetData("SessionNum");
             return sessionnum;
         }
-        catch
+        catch(Exception ex)
         {
+            _logger.LogError(ex, ex.Message);
             return null;
         }
     }

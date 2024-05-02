@@ -1,19 +1,19 @@
-﻿using IRacingSDK.Extensions;
+﻿using IRacingSDK.Abstractions;
+using IRacingSDK.Extensions;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace IRacingSDK.ConsoleDebugApp;
 
 internal class Program
 {
     static readonly ManualResetEvent _quitEvent = new(false);
-    private static IRacingSDKWrapper? _wrapper;
+    private static IIRacingSDKWrapper? _wrapper;
 
-    static void Main(string[] args)
+    static void Main()
     {
         IServiceProvider serviceProvider = ConfigureServices();
 
-        _wrapper = serviceProvider.GetRequiredService<IRacingSDKWrapper>();
+        _wrapper = serviceProvider.GetRequiredService<IIRacingSDKWrapper>();
 
         Console.CancelKeyPress += (sender, eArgs) =>
         {
@@ -32,9 +32,6 @@ internal class Program
         _quitEvent.WaitOne();
 
         _wrapper.Stop();
-
-
-
     }
 
     private static IServiceProvider ConfigureServices()

@@ -3,7 +3,7 @@ using IRacingSDK.Models;
 using IRacingSDK.Models.Enumerations;
 using System.IO.MemoryMappedFiles;
 
-namespace IRacingSDK;
+namespace IRacingSDK.Readers;
 
 /// <summary>
 /// Class that contains the methods to get the data from the game
@@ -53,13 +53,13 @@ internal class IRacingDataReader
         Dictionary<string, TelemetryVariableHeader> variableHeaders = [];
         for (int i = 0; i < iRSDKHeader.AmountOfVariables; i++)
         {
-            int type = (int) ReadIntValues(fileMapView, buffer: ((i * variableHeaderSize)), variableOffset: iRSDKHeader.VarHeaderOffset);
-            int offset = (int) ReadIntValues(fileMapView, buffer: ((i * variableHeaderSize) + _variableOffsetOffset), variableOffset: iRSDKHeader.VarHeaderOffset);
-            int count = (int) ReadIntValues(fileMapView, buffer: ((i * variableHeaderSize) + _variableCountOffset), variableOffset: iRSDKHeader.VarHeaderOffset);
+            int type = (int)ReadIntValues(fileMapView, buffer: i * variableHeaderSize, variableOffset: iRSDKHeader.VarHeaderOffset);
+            int offset = (int)ReadIntValues(fileMapView, buffer: i * variableHeaderSize + _variableOffsetOffset, variableOffset: iRSDKHeader.VarHeaderOffset);
+            int count = (int)ReadIntValues(fileMapView, buffer: i * variableHeaderSize + _variableCountOffset, variableOffset: iRSDKHeader.VarHeaderOffset);
 
-            string nameStr = ReadStringValues(fileMapView, Definitions.MaxString, buffer: ((i * variableHeaderSize) + _variableNameOffset), variableOffset: iRSDKHeader.VarHeaderOffset);
-            string descStr = ReadStringValues(fileMapView, Definitions.MaxDesc, buffer: ((i * variableHeaderSize) + _variableDescriptionOffset), variableOffset: iRSDKHeader.VarHeaderOffset);
-            string unitStr = ReadStringValues(fileMapView, Definitions.MaxString, buffer: ((i * variableHeaderSize) + _variableUnitOffset), variableOffset: iRSDKHeader.VarHeaderOffset);
+            string nameStr = ReadStringValues(fileMapView, Definitions.MaxString, buffer: i * variableHeaderSize + _variableNameOffset, variableOffset: iRSDKHeader.VarHeaderOffset);
+            string descStr = ReadStringValues(fileMapView, Definitions.MaxDesc, buffer: i * variableHeaderSize + _variableDescriptionOffset, variableOffset: iRSDKHeader.VarHeaderOffset);
+            string unitStr = ReadStringValues(fileMapView, Definitions.MaxString, buffer: i * variableHeaderSize + _variableUnitOffset, variableOffset: iRSDKHeader.VarHeaderOffset);
 
             variableHeaders[nameStr] = new TelemetryVariableHeader((VariableType)type, offset, count, nameStr, descStr, unitStr);
         }
