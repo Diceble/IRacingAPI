@@ -5,7 +5,7 @@ VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IRacingSDK.ConsoleDebugApp", "IRacingSDK.ConsoleDebugApp\IRacingSDK.ConsoleDebugApp.csproj", "{1B244961-4285-457F-8972-6ADB6ED648D9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IRacingAPI", "IRacingSDK\IRacingAPI.csproj", "{2BD44313-38C3-4141-9656-E4699633DF87}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IRacingAPI", "IRacingAPI\IRacingAPI.csproj", "{2BD44313-38C3-4141-9656-E4699633DF87}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
