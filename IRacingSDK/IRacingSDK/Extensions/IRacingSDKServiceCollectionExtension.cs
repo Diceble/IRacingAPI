@@ -1,8 +1,8 @@
-﻿using IRacingSDK.Abstractions;
+﻿using IRacingAPI.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace IRacingSDK.Extensions;
+namespace IRacingAPI.Extensions;
 public static class IRacingSDKServiceCollectionExtension
 {
     public static IServiceCollection AddIRacingSDK(this IServiceCollection services, Action<ILoggingBuilder>? configureLogging = null)
@@ -19,8 +19,8 @@ public static class IRacingSDKServiceCollectionExtension
             }
         });
 
-        services.AddScoped<IIRacingSDKWrapper, IRacingSDKWrapper>();
-        services.AddScoped<IIRacingSDK, IRacingSDK>();
+        services.AddScoped<IIRacingSDKWrapper, IRacingAPIWrapper>();
+        services.AddScoped<IIRacingDataApi, IRacingApi>();
 
         return services;
     }

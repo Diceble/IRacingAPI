@@ -1,4 +1,4 @@
-﻿namespace IRacingSDK.Abstractions;
+﻿namespace IRacingAPI.Abstractions;
 
 public interface IIRacingSDKWrapper
 {

@@ -1,4 +1,4 @@
-﻿namespace IRacingSDK.Models;
+﻿namespace IRacingAPI.Models;
 internal class SessionInfo
 {
 }

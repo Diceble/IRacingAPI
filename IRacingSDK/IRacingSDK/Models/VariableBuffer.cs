@@ -1,7 +1,7 @@
 ﻿using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
 
-namespace IRacingSDK.Models;
+namespace IRacingAPI.Models;
 
 public class VariableBuffer
 {
@@ -27,22 +27,22 @@ public class VariableBuffer
     {
         get
         {
-            int bufCount = Header.BufferCount;
-            int[] ticks = new int[Header.BufferCount];
-            for (int i = 0; i < bufCount; i++)
+            var bufCount = Header.BufferCount;
+            var ticks = new int[Header.BufferCount];
+            for (var i = 0; i < bufCount; i++)
             {
-                ticks[i] = FileMapView.ReadInt32(VarBufOffset + ((i * VarBufSize) + VarTickCountOffset));
+                ticks[i] = FileMapView.ReadInt32(VarBufOffset + i * VarBufSize + VarTickCountOffset);
             }
-            int latestTick = ticks[0];
-            int latest = 0;
-            for (int i = 0; i < bufCount; i++)
+            var latestTick = ticks[0];
+            var latest = 0;
+            for (var i = 0; i < bufCount; i++)
             {
                 if (latestTick < ticks[i])
                 {
                     latest = i;
                 }
             }
-            return FileMapView.ReadInt32(VarBufOffset + ((latest * VarBufSize) + VarBufOffsetOffset));
+            return FileMapView.ReadInt32(VarBufOffset + latest * VarBufSize + VarBufOffsetOffset);
         }
     }
 }

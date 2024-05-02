@@ -1,5 +1,5 @@
-﻿using IRacingSDK.Abstractions;
-using IRacingSDK.Extensions;
+﻿using IRacingAPI.Abstractions;
+using IRacingAPI.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace IRacingSDK.ConsoleDebugApp;

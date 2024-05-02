@@ -1,6 +1,4 @@
-﻿using IRacingSDK.Models.EventArguemnts;
-
-namespace IRacingSDK.Models.EventArguments;
+﻿namespace IRacingAPI.Models.EventArguments;
 internal class SessionInfoUpdatedEventArgs : SdkUpdateEventArgs
 {
     public SessionInfoUpdatedEventArgs(string sessionInfo, double time) : base(time)

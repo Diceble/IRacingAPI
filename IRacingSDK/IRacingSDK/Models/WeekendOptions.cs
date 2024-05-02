@@ -1,4 +1,4 @@
-﻿namespace IRacingSDK.Models;
+﻿namespace IRacingAPI.Models;
 public class WeekendOptions
 {
     public long NumStarters { get; set; }

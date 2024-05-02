@@ -1,4 +1,4 @@
-﻿namespace IRacingSDK.Exceptions;
+﻿namespace IRacingAPI.Exceptions;
 internal class InvalidOSPlatformException : Exception
 {
     public InvalidOSPlatformException() : base("Invalid OS Platform")

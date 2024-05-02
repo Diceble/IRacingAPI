@@ -1,20 +1,20 @@
-﻿using IRacingSDK.Abstractions;
-using IRacingSDK.Exceptions;
-using IRacingSDK.Models;
-using IRacingSDK.Readers;
+﻿using IRacingAPI.Abstractions;
+using IRacingAPI.Exceptions;
+using IRacingAPI.Models;
+using IRacingAPI.Readers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32.SafeHandles;
 using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
 
-namespace IRacingSDK;
+namespace IRacingAPI;
 
 /// <summary>
 /// Class that contains the methods to interact with iRacing to get the data from the game
 /// </summary>
-public class IRacingSDK : IIRacingSDK
+public class IRacingApi(ILogger<IRacingApi> logger) : IIRacingDataApi
 {
-    private readonly ILogger<IRacingSDK> _logger;
+    private readonly ILogger<IRacingApi> _logger = logger;
 
     public int VariableHeaderSize = 144;
 
@@ -24,17 +24,11 @@ public class IRacingSDK : IIRacingSDK
     /// </summary>
     public Dictionary<string, TelemetryVariableHeader> variableHeaders = [];
 
-    private IRSDKHeader header;
-
-    private MemoryMappedFile iRacingFile;
-    private MemoryMappedViewAccessor fileMapViewAccessor;
+    private IRSDKHeader? header;
+    private MemoryMappedFile? iRacingFile;
+    private MemoryMappedViewAccessor? fileMapViewAccessor;
 
     public bool IsInitialized = false;
-
-    public IRacingSDK(ILogger<IRacingSDK> logger)
-    {
-        _logger = logger;
-    }
 
     /// <summary>
     /// Starts the SDK and connects to all the necessary resources to start reading the data from the game
@@ -56,8 +50,8 @@ public class IRacingSDK : IIRacingSDK
             VariableHeaderSize = Marshal.SizeOf(typeof(VarHeader));
 
             var startUpEvent = DLLInjector.OpenEvent(Definitions.DesiredAccess, false, Definitions.DataValidEventName);
-            if (startUpEvent == IntPtr.Zero)
-            {               
+            if (startUpEvent == nint.Zero)
+            {
                 throw new Exception("Could not open event");
             }
             else
@@ -80,7 +74,7 @@ public class IRacingSDK : IIRacingSDK
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex,ex.Message);
+            _logger.LogError(ex, ex.Message);
             return false;
         }
         return true;

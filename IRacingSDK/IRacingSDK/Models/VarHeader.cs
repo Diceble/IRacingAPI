@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace IRacingSDK.Models;
+namespace IRacingAPI.Models;
 //144 bytes
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 public struct VarHeader

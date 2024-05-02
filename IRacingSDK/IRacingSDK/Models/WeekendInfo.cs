@@ -1,6 +1,6 @@
-﻿namespace IRacingSDK.Models;
+﻿namespace IRacingAPI.Models;
 public class WeekendInfo
-{ 
+{
     public string? TrackName { get; set; }
     public long TrackID { get; set; }
     public string? TrackLength { get; set; }

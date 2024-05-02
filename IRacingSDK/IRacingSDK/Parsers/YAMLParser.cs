@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace IRacingSDK.Parsers;
+namespace IRacingAPI.Parsers;
 
 /// <summary>
 /// Handles All the YAML Parsing
@@ -19,8 +19,8 @@ internal class YAMLParser
                 if (line.Count(c => c == ':') > 1)
                 {
                     var chars = line.ToCharArray();
-                    bool foundFirst = false;
-                    for (int i = 0; i < chars.Length; i++)
+                    var foundFirst = false;
+                    for (var i = 0; i < chars.Length; i++)
                     {
                         var c = chars[i];
                         if (c == ':')

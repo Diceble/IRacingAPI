@@ -1,8 +1,7 @@
-﻿using IRacingSDK.Models.Enumerations;
-using IRacingSDK.Models.EventArguemnts;
-using IRacingSDK.Models.EventArguments;
+﻿using IRacingAPI.Models.Enumerations;
+using IRacingAPI.Models.EventArguments;
 
-namespace IRacingSDK;
+namespace IRacingAPI;
 internal class IRacingEventHandler
 {
     public EventRaiseTypes EventRaiseType { get; set; }
@@ -45,7 +44,7 @@ internal class IRacingEventHandler
             }
         });
 
-        if (_context != null && _context == SynchronizationContext.Current && this.EventRaiseType == EventRaiseTypes.CurrentThread)
+        if (_context != null && _context == SynchronizationContext.Current && EventRaiseType == EventRaiseTypes.CurrentThread)
         {
             // Post the event method on the thread context, this raises the event on the thread on which the SdkWrapper object was created
             _context.Post(callback, e);

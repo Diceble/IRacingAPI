@@ -1,23 +1,23 @@
-﻿using IRacingSDK.Abstractions;
-using IRacingSDK.Models;
+﻿using IRacingAPI.Abstractions;
+using IRacingAPI.Models;
 using Microsoft.Extensions.Logging;
 using YamlDotNet.Serialization;
 
-namespace IRacingSDK;
-public class IRacingSDKWrapper : IIRacingSDKWrapper
+namespace IRacingAPI;
+public class IRacingAPIWrapper : IIRacingSDKWrapper
 {
     private bool _isRunning;
     private Task? _looper;
-    private IIRacingSDK _sdk;
+    private IIRacingDataApi _sdk;
     private bool _isConnected;
     private bool _hasConnected;
     private int _driverId = -1;
     private int waitTime;
     private readonly int _connectSleepTime;
 
-    private readonly ILogger<IRacingSDKWrapper> _logger;
+    private readonly ILogger<IRacingAPIWrapper> _logger;
 
-    public IRacingSDKWrapper(ILogger<IRacingSDKWrapper> logger, IIRacingSDK sdk)
+    public IRacingAPIWrapper(ILogger<IRacingAPIWrapper> logger, IIRacingDataApi sdk)
     {
         _driverId = -1;
         _connectSleepTime = 1000;
@@ -40,13 +40,13 @@ public class IRacingSDKWrapper : IIRacingSDKWrapper
     private void Loop()
     {
         _logger.LogInformation("Starting iRacing SDK Wrapper loop");
-        int lastUpdate = -1;
+        var lastUpdate = -1;
 
         while (_isRunning)
-        { 
+        {
             //Check if we can find the game
             if (_sdk.IsConnected())
-            {                
+            {
                 if (!_isConnected)
                 {
 
@@ -54,10 +54,10 @@ public class IRacingSDKWrapper : IIRacingSDKWrapper
                 _hasConnected = true;
                 _isConnected = true;
 
-                int attempts = 0;
+                var attempts = 0;
                 const int maxAttempts = 99;
 
-                object SessionNumber = TryGetSessionNum();
+                var SessionNumber = TryGetSessionNum();
                 while (SessionNumber == null && attempts <= maxAttempts)
                 {
                     attempts++;
@@ -79,14 +79,14 @@ public class IRacingSDKWrapper : IIRacingSDKWrapper
                 // Get the session time (in seconds) of this update
                 var time = (double)_sdk.GetData("SessionTime");
 
-                int newUpdate = _sdk.GetIRSDKHeader().SessionInfoUpdate;
+                var newUpdate = _sdk.GetIRSDKHeader().SessionInfoUpdate;
                 if (newUpdate != lastUpdate)
                 {
                     // Get the session info
                     var sessionInfo = _sdk.GetSessionData();
                     //var fixedYaml = YAMLParser.FixYaml(sessionInfo);
 
-                    IDeserializer deserializer = new DeserializerBuilder()  
+                    IDeserializer deserializer = new DeserializerBuilder()
                         .IgnoreUnmatchedProperties()
                         .Build();
 
@@ -114,7 +114,7 @@ public class IRacingSDKWrapper : IIRacingSDKWrapper
                 _logger.LogInformation("Trying to connect to iRacing");
                 _isConnected = false;
                 _hasConnected = false;
-                _driverId = -1;                                
+                _driverId = -1;
                 _sdk.StartUp();
             }
 
@@ -152,7 +152,7 @@ public class IRacingSDKWrapper : IIRacingSDKWrapper
             var sessionnum = _sdk.GetData("SessionNum");
             return sessionnum;
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
             return null;

@@ -1,6 +1,6 @@
 ﻿using System.IO.MemoryMappedFiles;
 
-namespace IRacingSDK.Models;
+namespace IRacingAPI.Models;
 public class IRSDKHeader
 {
     //Header offsets

@@ -1,8 +1,8 @@
-﻿using IRacingSDK.Models;
+﻿using IRacingAPI.Models;
 
-namespace IRacingSDK.Abstractions;
+namespace IRacingAPI.Abstractions;
 
-public interface IIRacingSDK
+public interface IIRacingDataApi
 {
     object GetData(string name);
     string GetSessionData();

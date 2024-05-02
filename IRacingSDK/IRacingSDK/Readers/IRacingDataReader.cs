@@ -1,9 +1,10 @@
-﻿using IRacingSDK.Exceptions;
-using IRacingSDK.Models;
-using IRacingSDK.Models.Enumerations;
+﻿using IRacingAPI;
+using IRacingAPI.Exceptions;
+using IRacingAPI.Models;
+using IRacingAPI.Models.Enumerations;
 using System.IO.MemoryMappedFiles;
 
-namespace IRacingSDK.Readers;
+namespace IRacingAPI.Readers;
 
 /// <summary>
 /// Class that contains the methods to get the data from the game
@@ -26,8 +27,8 @@ internal class IRacingDataReader
     /// <exception cref="VariableTypeNotfFoundException"></exception>
     internal static object FetchData(TelemetryVariableHeader variableHeader, MemoryMappedViewAccessor fileMapViewAccessor, int buffer)
     {
-        int variableOffset = variableHeader.Offset;
-        int count = variableHeader.Count;
+        var variableOffset = variableHeader.Offset;
+        var count = variableHeader.Count;
 
         return variableHeader.TypeOfVariable switch
         {
@@ -51,15 +52,15 @@ internal class IRacingDataReader
     {
 
         Dictionary<string, TelemetryVariableHeader> variableHeaders = [];
-        for (int i = 0; i < iRSDKHeader.AmountOfVariables; i++)
+        for (var i = 0; i < iRSDKHeader.AmountOfVariables; i++)
         {
-            int type = (int)ReadIntValues(fileMapView, buffer: i * variableHeaderSize, variableOffset: iRSDKHeader.VarHeaderOffset);
-            int offset = (int)ReadIntValues(fileMapView, buffer: i * variableHeaderSize + _variableOffsetOffset, variableOffset: iRSDKHeader.VarHeaderOffset);
-            int count = (int)ReadIntValues(fileMapView, buffer: i * variableHeaderSize + _variableCountOffset, variableOffset: iRSDKHeader.VarHeaderOffset);
+            var type = (int)ReadIntValues(fileMapView, buffer: i * variableHeaderSize, variableOffset: iRSDKHeader.VarHeaderOffset);
+            var offset = (int)ReadIntValues(fileMapView, buffer: i * variableHeaderSize + _variableOffsetOffset, variableOffset: iRSDKHeader.VarHeaderOffset);
+            var count = (int)ReadIntValues(fileMapView, buffer: i * variableHeaderSize + _variableCountOffset, variableOffset: iRSDKHeader.VarHeaderOffset);
 
-            string nameStr = ReadStringValues(fileMapView, Definitions.MaxString, buffer: i * variableHeaderSize + _variableNameOffset, variableOffset: iRSDKHeader.VarHeaderOffset);
-            string descStr = ReadStringValues(fileMapView, Definitions.MaxDesc, buffer: i * variableHeaderSize + _variableDescriptionOffset, variableOffset: iRSDKHeader.VarHeaderOffset);
-            string unitStr = ReadStringValues(fileMapView, Definitions.MaxString, buffer: i * variableHeaderSize + _variableUnitOffset, variableOffset: iRSDKHeader.VarHeaderOffset);
+            var nameStr = ReadStringValues(fileMapView, Definitions.MaxString, buffer: i * variableHeaderSize + _variableNameOffset, variableOffset: iRSDKHeader.VarHeaderOffset);
+            var descStr = ReadStringValues(fileMapView, Definitions.MaxDesc, buffer: i * variableHeaderSize + _variableDescriptionOffset, variableOffset: iRSDKHeader.VarHeaderOffset);
+            var unitStr = ReadStringValues(fileMapView, Definitions.MaxString, buffer: i * variableHeaderSize + _variableUnitOffset, variableOffset: iRSDKHeader.VarHeaderOffset);
 
             variableHeaders[nameStr] = new TelemetryVariableHeader((VariableType)type, offset, count, nameStr, descStr, unitStr);
         }
@@ -81,7 +82,7 @@ internal class IRacingDataReader
     {
         if (count > 1)
         {
-            int[] data = new int[count];
+            var data = new int[count];
             fileMapViewAccessor.ReadArray(buffer + variableOffset, data, 0, count);
             return data;
         }
@@ -93,7 +94,7 @@ internal class IRacingDataReader
 
     private static string ReadStringValues(MemoryMappedViewAccessor fileMapViewAccessor, int count, int buffer = 0, int variableOffset = 0)
     {
-        byte[] data = new byte[count];
+        var data = new byte[count];
         fileMapViewAccessor.ReadArray(buffer + variableOffset, data, 0, count);
         return System.Text.Encoding.Default.GetString(data).TrimEnd(['\0']);
     }
@@ -102,7 +103,7 @@ internal class IRacingDataReader
     {
         if (count > 1)
         {
-            double[] data = new double[count];
+            var data = new double[count];
             fileMapViewAccessor.ReadArray(buffer + variableOffset, data, 0, count);
             return data;
         }
@@ -116,7 +117,7 @@ internal class IRacingDataReader
     {
         if (count > 1)
         {
-            float[] data = new float[count];
+            var data = new float[count];
             fileMapViewAccessor.ReadArray(buffer + variableOffset, data, 0, count);
             return data;
         }
@@ -129,7 +130,7 @@ internal class IRacingDataReader
     {
         if (count > 1)
         {
-            bool[] data = new bool[count];
+            var data = new bool[count];
             fileMapViewAccessor.ReadArray(buffer + variableOffset, data, 0, count);
             return data;
         }

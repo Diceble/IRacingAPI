@@ -1,4 +1,4 @@
-﻿namespace IRacingSDK.Models.Enumerations;
+﻿namespace IRacingAPI.Models.Enumerations;
 
 /// <summary>
 /// The way in which events of the SDK wrapper are raised.

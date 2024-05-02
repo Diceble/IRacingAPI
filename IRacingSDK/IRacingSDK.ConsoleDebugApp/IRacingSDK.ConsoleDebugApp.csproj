@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\IRacingSDK\IRacingSDK.csproj" />
+    <ProjectReference Include="..\IRacingSDK\IRacingAPI.csproj" />
   </ItemGroup>
 
 </Project>

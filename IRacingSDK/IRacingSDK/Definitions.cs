@@ -1,4 +1,4 @@
-﻿namespace IRacingSDK;
+﻿namespace IRacingAPI;
 internal class Definitions
 {
     public const uint DesiredAccess = 2031619;

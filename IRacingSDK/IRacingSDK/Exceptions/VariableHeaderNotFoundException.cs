@@ -1,4 +1,4 @@
-﻿namespace IRacingSDK.Exceptions;
+﻿namespace IRacingAPI.Exceptions;
 internal class VariableHeaderNotFoundException : Exception
 {
     public VariableHeaderNotFoundException() : base("Variable header does not exist")

@@ -1,4 +1,4 @@
-﻿namespace IRacingSDK.Models.EventArguemnts;
+﻿namespace IRacingAPI.Models.EventArguments;
 
 internal class SdkUpdateEventArgs : EventArgs
 {

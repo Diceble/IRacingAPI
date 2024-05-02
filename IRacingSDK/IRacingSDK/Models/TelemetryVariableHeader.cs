@@ -1,6 +1,6 @@
-﻿using IRacingSDK.Models.Enumerations;
+﻿using IRacingAPI.Models.Enumerations;
 
-namespace IRacingSDK.Models;
+namespace IRacingAPI.Models;
 
 /// <summary>
 /// Class that contains the information of the telemetry variable header
@@ -29,7 +29,7 @@ public record TelemetryVariableHeader(VariableType TypeOfVariable, int Offset, i
                 return 4;
             }
             else if (TypeOfVariable == VariableType.irDouble)
-                {
+            {
                 return 8;
             }
 
