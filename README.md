@@ -1,6 +1,6 @@
 # IRacingAPI
 
-This project is a project still in development and is not yet ready to be used by third-parties.
+This project is still in development and is not yet ready to be used by third-parties.
 
 # Why another iRacing SDK/API?
 
