@@ -1,5 +1,5 @@
 ﻿using IRacingAPI.Abstractions;
-using IRacingAPI.Models;
+using IRacingAPI.Models.DataModels.YAML;
 using Microsoft.Extensions.Logging;
 using YamlDotNet.Serialization;
 
@@ -84,7 +84,6 @@ public class IRacingAPIWrapper : IIRacingSDKWrapper
                 {
                     // Get the session info
                     var sessionInfo = _sdk.GetSessionData();
-                    //var fixedYaml = YAMLParser.FixYaml(sessionInfo);
 
                     IDeserializer deserializer = new DeserializerBuilder()
                         .IgnoreUnmatchedProperties()

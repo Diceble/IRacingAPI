@@ -1,4 +1,4 @@
-﻿namespace IRacingAPI.Models;
+﻿namespace IRacingAPI.Models.DataModels.YAML.WeekendInformation;
 public class WeekendInfo
 {
     public string? TrackName { get; set; }
