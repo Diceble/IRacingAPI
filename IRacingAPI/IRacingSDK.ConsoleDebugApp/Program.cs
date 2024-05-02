@@ -11,8 +11,7 @@ internal class Program
 
     static void Main()
     {
-        IServiceProvider serviceProvider = ConfigureServices();
-
+        IServiceProvider serviceProvider = ConfigureServices;
         _wrapper = serviceProvider.GetRequiredService<IIRacingSDKWrapper>();
 
         Console.CancelKeyPress += (sender, eArgs) =>
@@ -34,10 +33,13 @@ internal class Program
         _wrapper.Stop();
     }
 
-    private static IServiceProvider ConfigureServices()
+    private static IServiceProvider ConfigureServices
     {
-        IServiceCollection services = new ServiceCollection().AddIRacingSDK();
+        get
+        {
+            IServiceCollection services = new ServiceCollection().AddIRacingSDK();
 
-        return services.BuildServiceProvider();
+            return services.BuildServiceProvider();
+        }
     }
 }
