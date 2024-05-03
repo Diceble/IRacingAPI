@@ -9,10 +9,14 @@ internal class Program
     static readonly ManualResetEvent _quitEvent = new(false);
     private static IIRacingSDKWrapper? _wrapper;
 
+
     static void Main()
     {
         IServiceProvider serviceProvider = ConfigureServices;
         _wrapper = serviceProvider.GetRequiredService<IIRacingSDKWrapper>();
+
+        CancellationTokenSource cancellationTokenSource = new();
+        CancellationToken cancellationToken = cancellationTokenSource.Token;
 
         Console.CancelKeyPress += (sender, eArgs) =>
         {
@@ -22,7 +26,7 @@ internal class Program
                 
         try
         {
-            _wrapper.Start();
+            _wrapper.Start(cancellationToken);
         }
         catch (Exception e)
         {
@@ -38,7 +42,6 @@ internal class Program
         get
         {
             IServiceCollection services = new ServiceCollection().AddIRacingSDK();
-
             return services.BuildServiceProvider();
         }
     }

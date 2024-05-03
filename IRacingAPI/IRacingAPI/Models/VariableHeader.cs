@@ -3,7 +3,7 @@
 namespace IRacingAPI.Models;
 
 /// <summary>
-/// Class that contains the information of the telemetry variable header
+/// Class that contains the information of the variable header
 /// </summary>
 /// <param name="TypeOfVariable">Indicates what type the variable is</param>
 /// <param name="Offset">Indicates how many bytes from the start of the telemetry buffer exists</param>
@@ -11,7 +11,7 @@ namespace IRacingAPI.Models;
 /// <param name="Name">Name of the variable</param>
 /// <param name="Desc">Description of the variable</param>
 /// <param name="Unit">Unit used of the variable</param>
-public record TelemetryVariableHeader(VariableType TypeOfVariable, int Offset, int Count, string Name, string Desc, string Unit)
+public record VariableHeader(VariableType TypeOfVariable, int Offset, int Count, string Name, string Desc, string Unit)
 {
     /// <summary>
     /// Gets the number of bytes the variable uses

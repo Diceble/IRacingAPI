@@ -20,7 +20,7 @@ public static class IRacingSDKServiceCollectionExtension
         });
 
         services.AddScoped<IIRacingSDKWrapper, IRacingAPIWrapper>();
-        services.AddScoped<IIRacingDataApi, IRacingApi>();
+        services.AddScoped<IIRacingApi, IRacingApi>();
 
         return services;
     }

@@ -2,6 +2,6 @@
 
 public interface IIRacingSDKWrapper
 {
-    void Start();
+    void Start(CancellationToken ct);
     void Stop();
 }

@@ -1,4 +1,5 @@
 ﻿using IRacingAPI.Abstractions;
+using IRacingAPI.Models.DataModels.TelemetryData;
 using IRacingAPI.Models.DataModels.YAML;
 using Microsoft.Extensions.Logging;
 using YamlDotNet.Serialization;
@@ -8,7 +9,7 @@ public class IRacingAPIWrapper : IIRacingSDKWrapper
 {
     private bool _isRunning;
     private Task? _looper;
-    private IIRacingDataApi _sdk;
+    private IIRacingApi _api;
     private bool _isConnected;
     private bool _hasConnected;
     private int _driverId = -1;
@@ -17,18 +18,18 @@ public class IRacingAPIWrapper : IIRacingSDKWrapper
 
     private readonly ILogger<IRacingAPIWrapper> _logger;
 
-    public IRacingAPIWrapper(ILogger<IRacingAPIWrapper> logger, IIRacingDataApi sdk)
+    public IRacingAPIWrapper(ILogger<IRacingAPIWrapper> logger, IIRacingApi sdk)
     {
         _driverId = -1;
         _connectSleepTime = 1000;
         _logger = logger;
-        _sdk = sdk;
+        _api = sdk;
     }
 
     /// <summary>
     /// Connects to iRacing and starts the main loop in a background thread
     /// </summary>
-    public void Start()
+    public void Start(CancellationToken ct)
     {
         _logger.LogInformation("Starting iRacing SDK Wrapper");
         _isRunning = true;
@@ -45,7 +46,7 @@ public class IRacingAPIWrapper : IIRacingSDKWrapper
         while (_isRunning)
         {
             //Check if we can find the game
-            if (_sdk.IsConnected())
+            if (_api.IsConnected())
             {
                 if (!_isConnected)
                 {
@@ -73,27 +74,29 @@ public class IRacingAPIWrapper : IIRacingSDKWrapper
                 // Parse out your own driver Id
                 if (_driverId == -1)
                 {
-                    _driverId = (int)_sdk.GetData("PlayerCarIdx");
+                    _driverId = (int)_api.GetDataByVariableHeaderName("PlayerCarIdx");
                 }
 
                 // Get the session time (in seconds) of this update
-                var time = (double)_sdk.GetData("SessionTime");
+                var time = (double)_api.GetDataByVariableHeaderName("SessionTime");
 
-                var newUpdate = _sdk.GetIRSDKHeader().SessionInfoUpdate;
+                TelemetryInfo telemetryInfo = _api.GetTelemetryInfo();
+
+
+                var newUpdate = _api.GetIRSDKHeader()?.SessionInfoUpdate;
                 if (newUpdate != lastUpdate)
                 {
                     // Get the session info
-                    var sessionInfo = _sdk.GetSessionData();
+                    var sessionInfo = _api.GetSessionData();
 
                     IDeserializer deserializer = new DeserializerBuilder()
                         .IgnoreUnmatchedProperties()
                         .Build();
 
                     SessionData? sessionData = deserializer.Deserialize<SessionData>(sessionInfo);
-
-
                     //this.RaiseEvent(OnSessionInfoUpdated, new SessionInfoUpdatedEventArgs(sessionInfo, time));
-                    lastUpdate = newUpdate;
+
+                    lastUpdate = newUpdate ?? -1;
                 }
             }
             else if (_hasConnected)
@@ -102,7 +105,7 @@ public class IRacingAPIWrapper : IIRacingSDKWrapper
                 // We have already been initialized before, so the sim is closing
                 //this.RaiseEvent(OnDisconnected, EventArgs.Empty);
 
-                _sdk.ShutDown();
+                _api.ShutDown();
                 _driverId = -1;
                 lastUpdate = -1;
                 _isConnected = false;
@@ -114,7 +117,7 @@ public class IRacingAPIWrapper : IIRacingSDKWrapper
                 _isConnected = false;
                 _hasConnected = false;
                 _driverId = -1;
-                _sdk.StartUp();
+                _api.StartUp();
             }
 
             // Sleep for a short amount of time until the next update is available
@@ -126,7 +129,7 @@ public class IRacingAPIWrapper : IIRacingSDKWrapper
                 }
 
                 Thread.Sleep(waitTime);
-            }
+            } 
             else
             {
                 // Not connected yet, no need to check every 16 ms, let's try again in some time
@@ -140,7 +143,7 @@ public class IRacingAPIWrapper : IIRacingSDKWrapper
     /// </summary>
     public void Stop()
     {
-        _isRunning = false;
+        _isRunning = false;        
         _looper?.Dispose();
     }
 
@@ -148,7 +151,7 @@ public class IRacingAPIWrapper : IIRacingSDKWrapper
     {
         try
         {
-            var sessionnum = _sdk.GetData("SessionNum");
+            var sessionnum = _api.GetDataByVariableHeaderName("SessionNum");
             return sessionnum;
         }
         catch (Exception ex)
