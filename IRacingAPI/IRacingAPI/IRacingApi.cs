@@ -134,42 +134,34 @@ public class IRacingApi(ILogger<IRacingApi> logger) : IIRacingApi
 
     public TelemetryInfo GetTelemetryInfo()
     {
+        List<TelemetryValue> values = new();
         foreach (KeyValuePair<string, VariableHeader> keyValuePair in variableHeaders)
         {
             VariableHeader variableHeader = keyValuePair.Value;
-            object value;
             
-            if (keyValuePair.Value.Count > 1)
-            {
-                value = variableHeader.TypeOfVariable switch
+            TelemetryValue value = keyValuePair.Value.Count > 1
+                ? variableHeader.TypeOfVariable switch
                 {
-                    VariableType.irChar => IRacingDataReader.GetValues<char>(fileMapViewAccessor!, variableHeader.Count, header!.Buffer, variableHeader.Offset),
-                    VariableType.irBool => IRacingDataReader.GetValues<bool>(fileMapViewAccessor!, variableHeader.Count, header!.Buffer, variableHeader.Offset),
-                    VariableType.irInt or VariableType.irBitField => IRacingDataReader.GetValues<int>(fileMapViewAccessor!, variableHeader.Count, header!.Buffer, variableHeader.Offset),
-                    VariableType.irFloat => IRacingDataReader.GetValues<float>(fileMapViewAccessor!, variableHeader.Count, header!.Buffer, variableHeader.Offset),
-                    VariableType.irDouble => IRacingDataReader.GetValues<double>(fileMapViewAccessor!, variableHeader.Count, header!.Buffer, variableHeader.Offset),
+                    VariableType.irChar => IRacingDataReader.GetTelemetryValues<char>(fileMapViewAccessor!, variableHeader, header!.Buffer),
+                    VariableType.irBool => IRacingDataReader.GetTelemetryValues<bool>(fileMapViewAccessor!, variableHeader, header!.Buffer),
+                    VariableType.irInt or VariableType.irBitField => IRacingDataReader.GetTelemetryValues<int>(fileMapViewAccessor!, variableHeader, header!.Buffer),
+                    VariableType.irFloat => IRacingDataReader.GetTelemetryValues<float>(fileMapViewAccessor!, variableHeader, header!.Buffer),
+                    VariableType.irDouble => IRacingDataReader.GetTelemetryValues<double>(fileMapViewAccessor!, variableHeader, header!.Buffer),
                     _ => throw new ArgumentException("Invalid VariableType"),
-                };                
-            }
-            else
-            {
-                value = variableHeader.TypeOfVariable switch
+                }
+                : (variableHeader.TypeOfVariable switch
                 {
-                    VariableType.irChar => IRacingDataReader.GetValue<char>(fileMapViewAccessor!, header!.Buffer, variableHeader.Offset),
-                    VariableType.irBool => IRacingDataReader.GetValue<bool>(fileMapViewAccessor!, header!.Buffer, variableHeader.Offset),
-                    VariableType.irInt or VariableType.irBitField => IRacingDataReader.GetValue<int>(fileMapViewAccessor!, header!.Buffer, variableHeader.Offset),
-                    VariableType.irFloat => IRacingDataReader.GetValue<float>(fileMapViewAccessor!, header!.Buffer, variableHeader.Offset),
-                    VariableType.irDouble => IRacingDataReader.GetValue<double>(fileMapViewAccessor!, header!.Buffer, variableHeader.Offset),
+                    VariableType.irChar => IRacingDataReader.GetTelemetryValue<char>(fileMapViewAccessor!, variableHeader, header!.Buffer),
+                    VariableType.irBool => IRacingDataReader.GetTelemetryValue<bool>(fileMapViewAccessor!, variableHeader, header!.Buffer),
+                    VariableType.irInt or VariableType.irBitField => IRacingDataReader.GetTelemetryValue<int>(fileMapViewAccessor!, variableHeader, header!.Buffer),
+                    VariableType.irFloat => IRacingDataReader.GetTelemetryValue<float>(fileMapViewAccessor!, variableHeader, header!.Buffer),
+                    VariableType.irDouble => IRacingDataReader.GetTelemetryValue<double>(fileMapViewAccessor!, variableHeader, header!.Buffer),
                     _ => throw new ArgumentException("Invalid VariableType"),
-                };
-            }
-            if (variableHeader.Name == "Speed")
-            {
-                _logger.LogInformation($"Variable: {keyValuePair.Key} Value: {value}");
-            }
-        }
+                });
 
-        return new TelemetryInfo();
+            values.Add(value);
+        }
+        return new TelemetryInfo(values);
     }
 
     private object TryGetDataByVariableHeaderName(string name)

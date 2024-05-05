@@ -1,8 +1,8 @@
 ﻿namespace IRacingAPI.Models.EventArguments;
 
-internal class SdkUpdateEventArgs : EventArgs
+public class APIUpdateEventArgs : EventArgs
 {
-    public SdkUpdateEventArgs(double time)
+    public APIUpdateEventArgs(double time)
     {
         _UpdateTime = time;
     }

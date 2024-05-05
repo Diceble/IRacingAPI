@@ -1,16 +1,12 @@
 ﻿using IRacingAPI.Models.DataModels.YAML;
 
 namespace IRacingAPI.Models.EventArguments;
-internal class SessionInfoUpdatedEventArgs : SdkUpdateEventArgs
+public class SessionInfoUpdatedEventArgs(SessionData sessionData, double time) : APIUpdateEventArgs(time)
 {
-    public SessionInfoUpdatedEventArgs(string sessionInfo, double time) : base(time)
-    {
-        _SessionInfo = new SessionData();
-    }
+    private readonly SessionData _sessionData = sessionData;
 
-    private readonly SessionData _SessionInfo;
     /// <summary>
     /// Gets the session info.
     /// </summary>
-    public SessionData SessionInfo => _SessionInfo;
+    public SessionData SessionInfo => _sessionData;
 }

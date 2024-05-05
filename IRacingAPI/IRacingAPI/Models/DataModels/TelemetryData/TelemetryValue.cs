@@ -1,37 +1,44 @@
 ﻿using IRacingAPI.Models.Enumerations;
-using System.Reflection.PortableExecutable;
 
 namespace IRacingAPI.Models.DataModels.TelemetryData;
 public abstract class TelemetryValue
 {
-    private readonly bool _exists;
-    /// <summary>
-    /// Whether or not a telemetry value with this name exists on the current car.
-    /// </summary>
-    public bool Exists { get { return _exists; } }
+    //private readonly bool _exists;
+    ///// <summary>
+    ///// Whether or not a telemetry value with this name exists on the current car.
+    ///// </summary>
+    //public bool Exists { get { return _exists; } }
 
-    private readonly string _name;
     /// <summary>
     /// The name of this telemetry value parameter.
     /// </summary>
-    public string Name { get { return _name; } }
+    public string? Name { get; set; }
 
-    private readonly string _description;
     /// <summary>
     /// The description of this parameter.
     /// </summary>
-    public string Description { get { return _description; } }
+    public string? Description { get; set; }
 
-    private readonly string _unit;
     /// <summary>
     /// The real world unit for this parameter.
     /// </summary>
-    public string Unit { get { return _unit; } }
+    public string? Unit { get; set; }
 
-    private readonly VariableType _type;
     /// <summary>
     /// The data-type for this parameter.
     /// </summary>
-    public VariableType Type { get { return _type; } }
+    public VariableType Type { get; set; }
+}
 
+public sealed class TelemetryValue<T> : TelemetryValue
+{
+    /// <summary>
+    /// The value of this parameter.
+    /// </summary>
+    public T? Value { get; set; }
+        
+    public override string ToString()
+    {
+        return string.Format("{0} {1}", this.Value, this.Unit);
+    }
 }

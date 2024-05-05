@@ -1,18 +1,13 @@
-﻿namespace IRacingAPI.Models.EventArguments;
+﻿using IRacingAPI.Models.DataModels.TelemetryData;
 
-internal class TelemetryUpdatedEventArgs : SdkUpdateEventArgs
+namespace IRacingAPI.Models.EventArguments;
+
+public class TelemetryUpdatedEventArgs(TelemetryInfo info, double time) : APIUpdateEventArgs(time)
 {
-    //public TelemetryUpdatedEventArgs(TelemetryInfo info, double time) : base(time)
-    //{
-    //    _TelemetryInfo = info;
-    //}
+    private readonly TelemetryInfo _TelemetryInfo = info;
 
-    //private readonly TelemetryInfo _TelemetryInfo;
-    ///// <summary>
-    ///// Gets the telemetry info object.
-    ///// </summary>
-    //public TelemetryInfo TelemetryInfo { get { return _TelemetryInfo; } }
-    public TelemetryUpdatedEventArgs(double time) : base(time)
-    {
-    }
+    /// <summary>
+    /// Gets the telemetry info object.
+    /// </summary>
+    public TelemetryInfo TelemetryInfo => _TelemetryInfo;
 }

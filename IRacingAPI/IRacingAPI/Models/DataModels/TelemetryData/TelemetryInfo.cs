@@ -1,4 +1,2 @@
 ﻿namespace IRacingAPI.Models.DataModels.TelemetryData;
-public class TelemetryInfo
-{
-}
+public record TelemetryInfo(IEnumerable<TelemetryValue> TelemetryValues);

@@ -1,12 +1,34 @@
 ﻿using IRacingAPI.Abstractions;
 using IRacingAPI.Models.DataModels.TelemetryData;
 using IRacingAPI.Models.DataModels.YAML;
+using IRacingAPI.Models.EventArguments;
 using Microsoft.Extensions.Logging;
 using YamlDotNet.Serialization;
 
 namespace IRacingAPI;
 public class IRacingAPIWrapper : IIRacingSDKWrapper
 {
+
+    /// <summary>
+    /// Event raised when the sim outputs telemetry information (60 times per second).
+    /// </summary>
+    public event EventHandler<TelemetryUpdatedEventArgs> TelemetryUpdated;
+
+    /// <summary>
+    /// Event raised when the sim refreshes the session info (few times per minute).
+    /// </summary>
+    public event EventHandler<SessionInfoUpdatedEventArgs> SessionInfoUpdated;
+
+    /// <summary>
+    /// Event raised when the SDK detects the sim for the first time.
+    /// </summary>
+    public event EventHandler Connected;
+
+    /// <summary>
+    /// Event raised when the SDK no longer detects the sim (sim closed).
+    /// </summary>
+    public event EventHandler Disconnected;
+
     private bool _isRunning;
     private Task? _looper;
     private IIRacingApi _api;
@@ -15,6 +37,7 @@ public class IRacingAPIWrapper : IIRacingSDKWrapper
     private int _driverId = -1;
     private int waitTime;
     private readonly int _connectSleepTime;
+    private readonly IRacingEventRaiser _eventRaiser;
 
     private readonly ILogger<IRacingAPIWrapper> _logger;
 
@@ -24,6 +47,7 @@ public class IRacingAPIWrapper : IIRacingSDKWrapper
         _connectSleepTime = 1000;
         _logger = logger;
         _api = sdk;
+        _eventRaiser = new IRacingEventRaiser();
     }
 
     /// <summary>
@@ -50,7 +74,7 @@ public class IRacingAPIWrapper : IIRacingSDKWrapper
             {
                 if (!_isConnected)
                 {
-
+                    _eventRaiser.RaiseEvent(OnConnected, EventArgs.Empty);
                 }
                 _hasConnected = true;
                 _isConnected = true;
@@ -81,20 +105,20 @@ public class IRacingAPIWrapper : IIRacingSDKWrapper
                 var time = (double)_api.GetDataByVariableHeaderName("SessionTime");
 
                 TelemetryInfo telemetryInfo = _api.GetTelemetryInfo();
-
+                _eventRaiser.RaiseEvent(OnTelemetryUpdated, new TelemetryUpdatedEventArgs(telemetryInfo, time));
 
                 var newUpdate = _api.GetIRSDKHeader()?.SessionInfoUpdate;
                 if (newUpdate != lastUpdate)
                 {
                     // Get the session info
-                    var sessionInfo = _api.GetSessionData();
+                    var yamlSessionInfo = _api.GetSessionData();
 
                     IDeserializer deserializer = new DeserializerBuilder()
                         .IgnoreUnmatchedProperties()
                         .Build();
 
-                    SessionData? sessionData = deserializer.Deserialize<SessionData>(sessionInfo);
-                    //this.RaiseEvent(OnSessionInfoUpdated, new SessionInfoUpdatedEventArgs(sessionInfo, time));
+                    SessionData? sessionData = deserializer.Deserialize<SessionData>(yamlSessionInfo);
+                    _eventRaiser.RaiseEvent(OnSessionInfoUpdated, new SessionInfoUpdatedEventArgs(sessionData, time));
 
                     lastUpdate = newUpdate ?? -1;
                 }
@@ -103,7 +127,7 @@ public class IRacingAPIWrapper : IIRacingSDKWrapper
             {
                 _logger.LogInformation("Lost connection to iRacing");
                 // We have already been initialized before, so the sim is closing
-                //this.RaiseEvent(OnDisconnected, EventArgs.Empty);
+                _eventRaiser.RaiseEvent(OnDisconnected, EventArgs.Empty);
 
                 _api.ShutDown();
                 _driverId = -1;
@@ -159,5 +183,25 @@ public class IRacingAPIWrapper : IIRacingSDKWrapper
             _logger.LogError(ex, ex.Message);
             return null;
         }
+    }
+
+    private void OnSessionInfoUpdated(SessionInfoUpdatedEventArgs e)
+    {
+        this.SessionInfoUpdated?.Invoke(this, e);
+    }
+
+    private void OnTelemetryUpdated(TelemetryUpdatedEventArgs e)
+    {
+        this.TelemetryUpdated?.Invoke(this, e);
+    }
+
+    private void OnConnected(EventArgs e)
+    {
+        this.Connected?.Invoke(this, e);
+    }
+
+    private void OnDisconnected(EventArgs e)
+    {
+        this.Disconnected?.Invoke(this, e);
     }
 }

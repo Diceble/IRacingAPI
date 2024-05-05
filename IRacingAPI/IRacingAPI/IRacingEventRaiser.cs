@@ -1,38 +1,17 @@
 ﻿using IRacingAPI.Models.Enumerations;
-using IRacingAPI.Models.EventArguments;
 
 namespace IRacingAPI;
-internal class IRacingEventHandler
+internal class IRacingEventRaiser
 {
     public EventRaiseTypes EventRaiseType { get; set; }
 
-    /// <summary>
-    /// Event raised when the sim outputs telemetry information (60 times per second).
-    /// </summary>
-    public event EventHandler<TelemetryUpdatedEventArgs> TelemetryUpdated;
-
-    /// <summary>
-    /// Event raised when the sim refreshes the session info (few times per minute).
-    /// </summary>
-    public event EventHandler<SessionInfoUpdatedEventArgs> SessionInfoUpdated;
-
-    /// <summary>
-    /// Event raised when the SDK detects the sim for the first time.
-    /// </summary>
-    public event EventHandler Connected;
-
-    /// <summary>
-    /// Event raised when the SDK no longer detects the sim (sim closed).
-    /// </summary>
-    public event EventHandler Disconnected;
-
-
     private readonly SynchronizationContext _context;
 
-    public IRacingEventHandler()
+    public IRacingEventRaiser()
     {
         _context = SynchronizationContext.Current ?? new();
     }
+
     internal void RaiseEvent<T>(Action<T> del, T e)
     where T : EventArgs
     {
