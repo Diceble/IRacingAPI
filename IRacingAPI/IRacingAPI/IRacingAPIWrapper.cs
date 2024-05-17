@@ -34,7 +34,6 @@ public class IRacingAPIWrapper : IIRacingSDKWrapper
     private IIRacingApi _api;
     private bool _isConnected;
     private bool _hasConnected;
-    private int _driverId = -1;
     private int waitTime;
     private readonly int _connectSleepTime;
     private readonly IRacingEventRaiser _eventRaiser;
@@ -43,7 +42,6 @@ public class IRacingAPIWrapper : IIRacingSDKWrapper
 
     public IRacingAPIWrapper(ILogger<IRacingAPIWrapper> logger, IIRacingApi sdk)
     {
-        _driverId = -1;
         _connectSleepTime = 1000;
         _logger = logger;
         _api = sdk;
@@ -55,16 +53,16 @@ public class IRacingAPIWrapper : IIRacingSDKWrapper
     /// </summary>
     public void Start(CancellationToken ct)
     {
-        _logger.LogInformation("Starting iRacing SDK Wrapper");
+        _logger.LogDebug("Starting iRacing SDK Wrapper");
         _isRunning = true;
         _looper?.Dispose();
-        _looper = Task.Run(Loop);
-        _logger.LogInformation("Successfully started loop");
+        _looper = Task.Run(Loop, ct);
+        _logger.LogDebug("Successfully started loop");
     }
 
     private void Loop()
     {
-        _logger.LogInformation("Starting iRacing SDK Wrapper loop");
+        _logger.LogDebug("Starting iRacing SDK Wrapper loop");
         var lastUpdate = -1;
 
         while (_isRunning)
@@ -79,33 +77,12 @@ public class IRacingAPIWrapper : IIRacingSDKWrapper
                 _hasConnected = true;
                 _isConnected = true;
 
-                var attempts = 0;
-                const int maxAttempts = 99;
-
-                var SessionNumber = TryGetSessionNum();
-                while (SessionNumber == null && attempts <= maxAttempts)
-                {
-                    attempts++;
-                    SessionNumber = TryGetSessionNum();
-                }
-
-                if (attempts >= maxAttempts)
-                {
-                    _logger.LogWarning("Too many attempts fetching session number");
-                    continue;
-                }
-
-                // Parse out your own driver Id
-                if (_driverId == -1)
-                {
-                    _driverId = (int)_api.GetDataByVariableHeaderName("PlayerCarIdx");
-                }
-
                 // Get the session time (in seconds) of this update
-                var time = (double)_api.GetDataByVariableHeaderName("SessionTime");
+                var time = _api.ReadValueByVariableHeaderName<double>("SessionTime").First();
 
                 TelemetryInfo telemetryInfo = _api.GetTelemetryInfo();
                 _eventRaiser.RaiseEvent(OnTelemetryUpdated, new TelemetryUpdatedEventArgs(telemetryInfo, time));
+                _logger.LogDebug("Fetched Telemetry info");
 
                 var newUpdate = _api.GetIRSDKHeader()?.SessionInfoUpdate;
                 if (newUpdate != lastUpdate)
@@ -119,28 +96,26 @@ public class IRacingAPIWrapper : IIRacingSDKWrapper
 
                     SessionData? sessionData = deserializer.Deserialize<SessionData>(yamlSessionInfo);
                     _eventRaiser.RaiseEvent(OnSessionInfoUpdated, new SessionInfoUpdatedEventArgs(sessionData, time));
-
+                    _logger.LogDebug("Fetched Session Data");
                     lastUpdate = newUpdate ?? -1;
                 }
             }
             else if (_hasConnected)
             {
-                _logger.LogInformation("Lost connection to iRacing");
+                _logger.LogDebug("Lost connection to iRacing");
                 // We have already been initialized before, so the sim is closing
                 _eventRaiser.RaiseEvent(OnDisconnected, EventArgs.Empty);
 
                 _api.ShutDown();
-                _driverId = -1;
                 lastUpdate = -1;
                 _isConnected = false;
                 _hasConnected = false;
             }
             else
             {
-                _logger.LogInformation("Trying to connect to iRacing");
+                _logger.LogDebug("Trying to connect to iRacing");
                 _isConnected = false;
                 _hasConnected = false;
-                _driverId = -1;
                 _api.StartUp();
             }
 
@@ -153,7 +128,7 @@ public class IRacingAPIWrapper : IIRacingSDKWrapper
                 }
 
                 Thread.Sleep(waitTime);
-            } 
+            }
             else
             {
                 // Not connected yet, no need to check every 16 ms, let's try again in some time
@@ -167,7 +142,7 @@ public class IRacingAPIWrapper : IIRacingSDKWrapper
     /// </summary>
     public void Stop()
     {
-        _isRunning = false;        
+        _isRunning = false;
         _looper?.Dispose();
     }
 
@@ -175,7 +150,7 @@ public class IRacingAPIWrapper : IIRacingSDKWrapper
     {
         try
         {
-            var sessionnum = _api.GetDataByVariableHeaderName("SessionNum");
+            var sessionnum = _api.ReadValueByVariableHeaderName<int>("SessionNum").First();
             return sessionnum;
         }
         catch (Exception ex)
@@ -192,6 +167,7 @@ public class IRacingAPIWrapper : IIRacingSDKWrapper
 
     private void OnTelemetryUpdated(TelemetryUpdatedEventArgs e)
     {
+
         this.TelemetryUpdated?.Invoke(this, e);
     }
 

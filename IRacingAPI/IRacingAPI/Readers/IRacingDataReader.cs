@@ -1,9 +1,8 @@
-﻿using IRacingAPI.Exceptions;
-using IRacingAPI.Models;
+﻿using IRacingAPI.Models;
 using IRacingAPI.Models.DataModels.TelemetryData;
 using IRacingAPI.Models.Enumerations;
 using System.IO.MemoryMappedFiles;
-using System.Reflection.PortableExecutable;
+using YamlDotNet.Core.Tokens;
 
 namespace IRacingAPI.Readers;
 
@@ -19,27 +18,47 @@ internal class IRacingDataReader
     private const int _variableUnitOffset = 112;
 
     /// <summary>
-    /// Fetches the data from the memory mapped file based on the variable header
+    /// Reads values from the memory mapped file based on the type of the variable which must be a struct
     /// </summary>
-    /// <param name="variableHeader">Variable header that gets used to find the data</param>
+    /// <typeparam name="T">Type that you want to extract which must be a struct</typeparam>
     /// <param name="fileMapViewAccessor">Memmory mapped file that contains all the data</param>
-    /// <param name="buffer">piece of memory where data lives</param>
-    /// <returns></returns>
-    /// <exception cref="VariableTypeNotfFoundException"></exception>
-    internal static object GetData(VariableHeader variableHeader, MemoryMappedViewAccessor fileMapViewAccessor, int buffer)
+    /// <param name="header"> variableHeader that contains infromation to get the values and setup up <see cref="TelemetryValue{T}"/></param>
+    /// <param name="buffer">Indicates along withvariableOffset where reading should start</param>
+    /// <returns><see cref="TelemetryValue{T}"/> which contains the values of the variable </returns>
+    internal static TelemetryValue<T[]> ReadTelemetryValues<T>(MemoryMappedViewAccessor fileMapViewAccessor, VariableHeader header, int buffer = 0) where T : struct
     {
-        var variableOffset = variableHeader.Offset;
-        var count = variableHeader.Count;
-
-        return variableHeader.TypeOfVariable switch
+        TelemetryValue<T[]> telemetryValue = new()
         {
-            VariableType.irChar => ReadStringValues(fileMapViewAccessor, count, buffer, variableOffset),
-            VariableType.irBool => ReadBoolValues(fileMapViewAccessor, count, buffer, variableOffset),
-            VariableType.irInt or VariableType.irBitField => ReadIntValues(fileMapViewAccessor, count, buffer, variableOffset),
-            VariableType.irFloat => ReadFloatValues(fileMapViewAccessor, count, buffer, variableOffset),
-            VariableType.irDouble => ReadDoubleValues(fileMapViewAccessor, buffer, variableOffset, count),
-            _ => throw new VariableTypeNotfFoundException(),
+            Name = header.Name,
+            Description = header.Desc,
+            Unit = header.Unit,
+            Type = header.TypeOfVariable,
+            Value = ReadValues<T>(fileMapViewAccessor, header.Count, buffer, header.Offset)
         };
+
+        return telemetryValue;
+    }
+
+    /// <summary>
+    /// Reads value from the memory mapped file based on the type of the variable which must be a struct
+    /// </summary>
+    /// <typeparam name="T">Type that you want to extract which must be a struct</typeparam>
+    /// <param name="fileMapViewAccessor">Memmory mapped file that contains all the data</param>
+    /// <param name="header"> variableHeader that contains infromation to get the values and setup up <see cref="TelemetryValue{T}"/></param>
+    /// <param name="buffer">Indicates along withvariableOffset where reading should start</param>
+    /// <returns><see cref="TelemetryValue{T}"/> which contains the value of the variable </returns>
+    internal static TelemetryValue<T> ReadTelemetryValue<T>(MemoryMappedViewAccessor fileMapViewAccessor, VariableHeader header, int buffer = 0) where T : struct
+    {
+        TelemetryValue<T> telemetryValue = new()
+        {
+            Name = header.Name,
+            Description = header.Desc,
+            Unit = header.Unit,
+            Type = header.TypeOfVariable,
+            Value = ReadValue<T>(fileMapViewAccessor, buffer, header.Offset)
+        };
+
+        return telemetryValue;
     }
 
     /// <summary>
@@ -51,50 +70,22 @@ internal class IRacingDataReader
     /// <param name="buffer">Indicates along withvariableOffset where reading should start</param>
     /// <param name="variableOffset">Indicates along with buffer where reading should start</param>
     /// <returns>the values of the specified variable header</returns>
-    internal static T[] GetValues<T>(MemoryMappedViewAccessor fileMapViewAccessor, int count = 0, int buffer = 0,int variableOffset = 0) where T : struct
+    internal static T[] ReadValues<T>(MemoryMappedViewAccessor fileMapViewAccessor, int count = 0, int buffer = 0, int variableOffset = 0) where T : struct
     {
         T[] data = new T[count];
         fileMapViewAccessor.ReadArray(buffer + variableOffset, data, 0, count);
         return data;
     }
 
-    internal static TelemetryValue<T[]> GetTelemetryValues<T>(MemoryMappedViewAccessor fileMapViewAccessor, VariableHeader header, int buffer = 0) where T : struct
-    {
-        TelemetryValue<T[]> telemetryValue = new()
-        {
-            Name = header.Name,
-            Description = header.Desc,
-            Unit = header.Unit,
-            Type = header.TypeOfVariable,
-            Value = GetValues<T>(fileMapViewAccessor, header.Count, buffer, header.Offset)
-        };
-
-        return telemetryValue;
-    }
-
-    internal static TelemetryValue<T> GetTelemetryValue<T>(MemoryMappedViewAccessor fileMapViewAccessor, VariableHeader header, int buffer = 0) where T : struct
-    {
-        TelemetryValue<T> telemetryValue = new()
-        {
-            Name = header.Name,
-            Description = header.Desc,
-            Unit = header.Unit,
-            Type = header.TypeOfVariable,
-            Value = GetValue<T>(fileMapViewAccessor, buffer, header.Offset)
-        };
-
-        return telemetryValue;
-    }
-
     /// <summary>
-    /// Gets value from the memory mapped file based on the type of the variable which must be a struct
+    /// Reads value from the memory mapped file based on the type of the variable which must be a struct
     /// </summary>
     /// <typeparam name="T">Type that you want to extract which must be a struct</typeparam>
     /// <param name="fileMapViewAccessor">Memmory mapped file that contains all the data</param>
     /// <param name="buffer">Indicates along with variableOffset where reading should start</param>
     /// <param name="variableOffset">Indicates along with buffer where reading should start</param>
     /// <returns>the value of the specified variable header</returns>
-    internal static T GetValue<T>(MemoryMappedViewAccessor fileMapViewAccessor, int buffer = 0, int variableOffset = 0) where T : struct
+    internal static T ReadValue<T>(MemoryMappedViewAccessor fileMapViewAccessor, int buffer = 0, int variableOffset = 0) where T : struct
     {
         fileMapViewAccessor.Read(buffer + variableOffset, out T structure);
         return structure;
@@ -109,19 +100,18 @@ internal class IRacingDataReader
     /// <returns> <see cref="Dictionary{string, TelemetryVariableHeader}"/> that contains all the variable headers that are available in the current session</returns>
     internal static Dictionary<string, VariableHeader> GetVariableHeaders(MemoryMappedViewAccessor fileMapView, IRSDKHeader iRSDKHeader, int variableHeaderSize)
     {
-
         Dictionary<string, VariableHeader> variableHeaders = [];
         for (var i = 0; i < iRSDKHeader.AmountOfVariables; i++)
         {
-            var type = (int)ReadIntValues(fileMapView, buffer: i * variableHeaderSize, variableOffset: iRSDKHeader.VarHeaderOffset);
-            var offset = (int)ReadIntValues(fileMapView, buffer: i * variableHeaderSize + _variableOffsetOffset, variableOffset: iRSDKHeader.VarHeaderOffset);
-            var count = (int)ReadIntValues(fileMapView, buffer: i * variableHeaderSize + _variableCountOffset, variableOffset: iRSDKHeader.VarHeaderOffset);
+            var type = ReadValue<int>(fileMapView, buffer: i * variableHeaderSize, variableOffset: iRSDKHeader.VarHeaderOffset);
+            var offset = ReadValue<int>(fileMapView, buffer: i * variableHeaderSize + _variableOffsetOffset, variableOffset: iRSDKHeader.VarHeaderOffset);
+            var count = ReadValue<int>(fileMapView, buffer: i * variableHeaderSize + _variableCountOffset, variableOffset: iRSDKHeader.VarHeaderOffset);
 
-            var nameStr = ReadStringValues(fileMapView, Definitions.MaxString, buffer: i * variableHeaderSize + _variableNameOffset, variableOffset: iRSDKHeader.VarHeaderOffset);
-            var descStr = ReadStringValues(fileMapView, Definitions.MaxDesc, buffer: i * variableHeaderSize + _variableDescriptionOffset, variableOffset: iRSDKHeader.VarHeaderOffset);
-            var unitStr = ReadStringValues(fileMapView, Definitions.MaxString, buffer: i * variableHeaderSize + _variableUnitOffset, variableOffset: iRSDKHeader.VarHeaderOffset);
+            var name = ReadStringValues(fileMapView, Definitions.MaxString, buffer: i * variableHeaderSize + _variableNameOffset, variableOffset: iRSDKHeader.VarHeaderOffset);
+            var description = ReadStringValues(fileMapView, Definitions.MaxDesc, buffer: i * variableHeaderSize + _variableDescriptionOffset, variableOffset: iRSDKHeader.VarHeaderOffset);
+            var unit = ReadStringValues(fileMapView, Definitions.MaxString, buffer: i * variableHeaderSize + _variableUnitOffset, variableOffset: iRSDKHeader.VarHeaderOffset);
 
-            variableHeaders[nameStr] = new VariableHeader((VariableType)type, offset, count, nameStr, descStr, unitStr);
+            variableHeaders[name] = new VariableHeader((VariableType)type, offset, count, name, description, unit);
         }
         return variableHeaders;
     }
@@ -134,70 +124,13 @@ internal class IRacingDataReader
     /// <returns>Session data as a string in YAML formatation</returns>
     internal static string GetSessionData(MemoryMappedViewAccessor fileMapView, IRSDKHeader header)
     {
-        var data = GetValues<byte>(fileMapView, header.SessionInfoLength, variableOffset: header.SessionInfoOffset);
+        var data = ReadValues<byte>(fileMapView, header.SessionInfoLength, variableOffset: header.SessionInfoOffset);
         return System.Text.Encoding.Default.GetString(data).TrimEnd(['\0']);
-    }
-
-    private static object ReadIntValues(MemoryMappedViewAccessor fileMapViewAccessor, int count = 0, int buffer = 0, int variableOffset = 0)
-    {
-        if (count > 1)
-        {
-            var data = new int[count];
-            fileMapViewAccessor.ReadArray(buffer + variableOffset, data, 0, count);
-            return data;
-        }
-        else
-        {
-            return fileMapViewAccessor.ReadInt32(buffer + variableOffset);
-        }
     }
 
     private static string ReadStringValues(MemoryMappedViewAccessor fileMapViewAccessor, int count, int buffer = 0, int variableOffset = 0)
     {
-        byte[] data = new byte[count];
-        fileMapViewAccessor?.ReadArray(buffer + variableOffset, data, 0, count);
+        var data = ReadValues<byte>(fileMapViewAccessor, count, buffer, variableOffset);
         return System.Text.Encoding.Default.GetString(data).TrimEnd(['\0']);
-    }
-
-    private static object ReadDoubleValues(MemoryMappedViewAccessor fileMapViewAccessor, int buffer, int variableOffset, int count)
-    {
-        if (count > 1)
-        {
-            var data = new double[count];
-            fileMapViewAccessor.ReadArray(buffer + variableOffset, data, 0, count);
-            return data;
-        }
-        else
-        {
-            return fileMapViewAccessor.ReadDouble(buffer + variableOffset);
-        }
-    }
-
-    private static object ReadFloatValues(MemoryMappedViewAccessor fileMapViewAccessor, int count, int buffer = 0, int variableOffset = 0)
-    {
-        if (count > 1)
-        {
-            var data = new float[count];
-            fileMapViewAccessor.ReadArray(buffer + variableOffset, data, 0, count);
-            return data;
-        }
-        else
-        {
-            var test = fileMapViewAccessor.ReadSingle(buffer + variableOffset);
-            return fileMapViewAccessor.ReadSingle(buffer + variableOffset);
-        }
-    }
-    private static object ReadBoolValues(MemoryMappedViewAccessor fileMapViewAccessor, int count, int buffer = 0, int variableOffset = 0)
-    {
-        if (count > 1)
-        {
-            var data = new bool[count];
-            fileMapViewAccessor.ReadArray(buffer + variableOffset, data, 0, count);
-            return data;
-        }
-        else
-        {
-            return fileMapViewAccessor.ReadBoolean(buffer + variableOffset);
-        }
     }
 }

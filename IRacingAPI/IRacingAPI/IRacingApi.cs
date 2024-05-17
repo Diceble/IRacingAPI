@@ -115,16 +115,10 @@ public class IRacingApi(ILogger<IRacingApi> logger) : IIRacingApi
         return IsInitialized && header != null && (header.Status & 1) > 0;
     }
 
-    /// <summary>
-    /// Gets the data from the game based on the name of the variable
-    /// </summary>
-    /// <param name="name">name of the variable that the data gets collected from</param>
-    /// <returns>value from provided <see cref="name"/></returns>
-    /// <exception cref="VariableHeaderNotFoundException">Meaning provided Variable name does not exist</exception>
-    /// <exception cref="IRacingSDKNotInitializedException"></exception>
-    public object GetDataByVariableHeaderName(string name)
+
+    public T[] ReadValueByVariableHeaderName<T>(string name) where T : struct
     {
-        return IsInitialized && header != null && fileMapViewAccessor != null ? TryGetDataByVariableHeaderName(name) : throw new IRacingSDKNotInitializedException();
+        return IsConnected() ? TryReadValueByVariableHeaderName<T>(name) : throw new IRacingSDKNotInitializedException();
     }
 
     public IRSDKHeader? GetIRSDKHeader()
@@ -134,41 +128,77 @@ public class IRacingApi(ILogger<IRacingApi> logger) : IIRacingApi
 
     public TelemetryInfo GetTelemetryInfo()
     {
-        List<TelemetryValue> values = new();
+        List<string> unknownHeaders = new();
+        TelemetryInfo telemetryInfo = new();
+
         foreach (KeyValuePair<string, VariableHeader> keyValuePair in variableHeaders)
         {
             VariableHeader variableHeader = keyValuePair.Value;
-            
-            TelemetryValue value = keyValuePair.Value.Count > 1
-                ? variableHeader.TypeOfVariable switch
-                {
-                    VariableType.irChar => IRacingDataReader.GetTelemetryValues<char>(fileMapViewAccessor!, variableHeader, header!.Buffer),
-                    VariableType.irBool => IRacingDataReader.GetTelemetryValues<bool>(fileMapViewAccessor!, variableHeader, header!.Buffer),
-                    VariableType.irInt or VariableType.irBitField => IRacingDataReader.GetTelemetryValues<int>(fileMapViewAccessor!, variableHeader, header!.Buffer),
-                    VariableType.irFloat => IRacingDataReader.GetTelemetryValues<float>(fileMapViewAccessor!, variableHeader, header!.Buffer),
-                    VariableType.irDouble => IRacingDataReader.GetTelemetryValues<double>(fileMapViewAccessor!, variableHeader, header!.Buffer),
-                    _ => throw new ArgumentException("Invalid VariableType"),
-                }
-                : (variableHeader.TypeOfVariable switch
-                {
-                    VariableType.irChar => IRacingDataReader.GetTelemetryValue<char>(fileMapViewAccessor!, variableHeader, header!.Buffer),
-                    VariableType.irBool => IRacingDataReader.GetTelemetryValue<bool>(fileMapViewAccessor!, variableHeader, header!.Buffer),
-                    VariableType.irInt or VariableType.irBitField => IRacingDataReader.GetTelemetryValue<int>(fileMapViewAccessor!, variableHeader, header!.Buffer),
-                    VariableType.irFloat => IRacingDataReader.GetTelemetryValue<float>(fileMapViewAccessor!, variableHeader, header!.Buffer),
-                    VariableType.irDouble => IRacingDataReader.GetTelemetryValue<double>(fileMapViewAccessor!, variableHeader, header!.Buffer),
-                    _ => throw new ArgumentException("Invalid VariableType"),
-                });
 
-            values.Add(value);
+            if (typeof(TelemetryInfo).GetProperty(variableHeader.Name) != null)
+            {
+                object value = GetTelemetryValue(keyValuePair);
+
+                try
+                {
+                    telemetryInfo.GetType().GetProperty(variableHeader.Name)?.SetValue(telemetryInfo, value);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, ex.Message);
+                }
+            }
+            else
+            {
+                unknownHeaders.Add(variableHeader.Name);
+            }
         }
-        return new TelemetryInfo(values);
+        return telemetryInfo;
     }
 
-    private object TryGetDataByVariableHeaderName(string name)
+    private T[] TryReadValueByVariableHeaderName<T>(string name) where T : struct
     {
-        return variableHeaders.TryGetValue(name, out VariableHeader? value)
-                ? IRacingDataReader.GetData(value, fileMapViewAccessor!, header!.Buffer)
-                : throw new VariableHeaderNotFoundException(name);
+        if (variableHeaders.TryGetValue(name, out VariableHeader? variableHeader))
+        {
+            if (variableHeader.Count > 1)
+            {
+                return IRacingDataReader.ReadValues<T>(fileMapViewAccessor!, variableHeader.Count, header!.Buffer, variableHeader.Offset);
+            }
+            else
+            {
+                T value = IRacingDataReader.ReadValue<T>(fileMapViewAccessor!, header!.Buffer, variableHeader.Offset);
+                return [value];
+            }
+        }
+        else
+        {
+            throw new VariableHeaderNotFoundException(name);
+        }
+    }
+
+    private object GetTelemetryValue(KeyValuePair<string, VariableHeader> keyValuePair)
+    {
+        VariableHeader variableHeader = keyValuePair.Value;
+        object value = keyValuePair.Value.Count > 1
+            ? variableHeader.TypeOfVariable switch
+            {
+                VariableType.irChar => IRacingDataReader.ReadTelemetryValues<char>(fileMapViewAccessor!, variableHeader, header!.Buffer),
+                VariableType.irBool => IRacingDataReader.ReadTelemetryValues<bool>(fileMapViewAccessor!, variableHeader, header!.Buffer),
+                VariableType.irInt or VariableType.irBitField => IRacingDataReader.ReadTelemetryValues<int>(fileMapViewAccessor!, variableHeader, header!.Buffer),
+                VariableType.irFloat => IRacingDataReader.ReadTelemetryValues<float>(fileMapViewAccessor!, variableHeader, header!.Buffer),
+                VariableType.irDouble => IRacingDataReader.ReadTelemetryValues<double>(fileMapViewAccessor!, variableHeader, header!.Buffer),
+                _ => throw new ArgumentException("Invalid VariableType"),
+            }
+            : (variableHeader.TypeOfVariable switch
+            {
+                VariableType.irChar => IRacingDataReader.ReadTelemetryValue<char>(fileMapViewAccessor!, variableHeader, header!.Buffer),
+                VariableType.irBool => IRacingDataReader.ReadTelemetryValue<bool>(fileMapViewAccessor!, variableHeader, header!.Buffer),
+                VariableType.irInt or VariableType.irBitField => IRacingDataReader.ReadTelemetryValue<int>(fileMapViewAccessor!, variableHeader, header!.Buffer),
+                VariableType.irFloat => IRacingDataReader.ReadTelemetryValue<float>(fileMapViewAccessor!, variableHeader, header!.Buffer),
+                VariableType.irDouble => IRacingDataReader.ReadTelemetryValue<double>(fileMapViewAccessor!, variableHeader, header!.Buffer),
+                _ => throw new ArgumentException("Invalid VariableType"),
+            });
+        return value;
     }
 
     private MemoryMappedViewAccessor AccessIRacingFile()

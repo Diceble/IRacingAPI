@@ -5,7 +5,7 @@ namespace IRacingAPI.Abstractions;
 
 public interface IIRacingApi
 {
-    object GetDataByVariableHeaderName(string name);
+    T[] ReadValueByVariableHeaderName<T>(string name) where T : struct;
     string GetSessionData();
     bool IsConnected();
     void ShutDown();
