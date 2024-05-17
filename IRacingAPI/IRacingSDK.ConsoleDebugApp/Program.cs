@@ -1,5 +1,6 @@
 ﻿using IRacingAPI.Abstractions;
 using IRacingAPI.Extensions;
+using IRacingAPI.Models.EventArguments;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace IRacingSDK.ConsoleDebugApp;
@@ -27,6 +28,7 @@ internal class Program
         try
         {
             _wrapper.Start(cancellationToken);
+            _wrapper.TelemetryUpdated += OnTelemetryUpdated;
         }
         catch (Exception e)
         {
@@ -44,5 +46,10 @@ internal class Program
             IServiceCollection services = new ServiceCollection().AddIRacingSDK();
             return services.BuildServiceProvider();
         }
+    }
+
+    private static void OnTelemetryUpdated(object? sender, TelemetryUpdatedEventArgs e)
+    {
+        Console.WriteLine("Telemetry updated");
     }
 }
